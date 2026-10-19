@@ -1,0 +1,82 @@
+
+{% extends "base.html" %}
+
+{% block title %}Watchlists | Stock Terminal{% endblock %}
+{% block page_heading %}My Watchlists{% endblock %}
+{% block page_subtitle %}Keep track of stocks you want to follow{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Saved Watchlists</h2>
+            <div class="subtitle">Your watchlists and their associated stocks</div>
+        </div>
+        <span class="demo-badge">MARKET TRACKER</span>
+    </div>
+
+    {% for watchlist in watchlists %}
+    <div class="panel" style="background:#0c1423">
+        <div class="panel-header">
+            <div>
+                <h3 class="panel-title">{{ watchlist.watchlist_name }}</h3>
+                <div class="subtitle">Watchlist ID: #{{ watchlist.watchlist_id }}</div>
+            </div>
+            <span class="status-badge">{{ watchlist.stocks|length }} STOCKS</span>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SYMBOL</th>
+                        <th>COMPANY</th>
+                        <th>SECTOR</th>
+                        <th>CURRENT PRICE</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in watchlist.stocks %}
+                    <tr>
+                        <td class="stock-symbol">{{ stock.symbol }}</td>
+                        <td>{{ stock.company_name }}</td>
+                        <td>{{ stock.sector_name or 'Other' }}</td>
+                        <td>₹{{ "%.2f"|format(stock.price|float) }}</td>
+                        <td>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <a class="btn btn-primary"
+                                   href="{{ url_for('stocks') }}">Trade</a>
+
+                                <form method="POST"
+                                      action="{{ url_for('remove_watchlist_stock') }}"
+                                      onsubmit="return confirm('Remove {{ stock.symbol }} from this watchlist?');"
+                                      style="margin:0;">
+                                    <input type="hidden" name="watchlist_id"
+                                           value="{{ watchlist.watchlist_id }}">
+                                    <input type="hidden" name="stock_id"
+                                           value="{{ stock.stock_id }}">
+                                    <button type="submit" class="btn"
+                                            style="background:#6b2935; color:#fff; border:1px solid #914052;">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            No stocks in this watchlist.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">No watchlists found for this account.</div>
+    {% endfor %}
+</div>
+{% endblock %}

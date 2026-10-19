@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Account Details | Stock Terminal{% endblock %}
+{% block page_heading %}Account Details{% endblock %}
+{% block page_subtitle %}Your investor profile and trading account{% endblock %}
+
+{% block content %}
+<div class="content-grid">
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Investor Profile</h2>
+            <span class="status-badge">DEMO ACCOUNT</span>
+        </div>
+
+        {% if investor %}
+        <div class="form-group">
+            <label>Investor ID</label>
+            <div class="form-control">#{{ investor.investor_id }}</div>
+        </div>
+        <div class="form-group">
+            <label>Full Name</label>
+            <div class="form-control">{{ investor.name }}</div>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <div class="form-control">{{ investor.email }}</div>
+        </div>
+        <div class="form-group">
+            <label>Phone</label>
+            <div class="form-control">{{ investor.phone or 'Not provided' }}</div>
+        </div>
+        <div class="form-group">
+            <label>Address</label>
+            <div class="form-control">{{ investor.address or 'Not provided' }}</div>
+        </div>
+        {% else %}
+        <div class="empty-state">No investor profile found.</div>
+        {% endif %}
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Trading Account</h2>
+        </div>
+
+        {% if account %}
+        <div class="form-group">
+            <label>Account ID</label>
+            <div class="form-control">#{{ account.account_id }}</div>
+        </div>
+        <div class="form-group">
+            <label>Account Type</label>
+            <div class="form-control">{{ account.account_type }}</div>
+        </div>
+        <div class="form-group">
+            <label>Opening Date</label>
+            <div class="form-control">{{ account.open_date }}</div>
+        </div>
+        <div class="form-group">
+            <label>Available Balance</label>
+            <div class="form-control green">₹{{ "%.2f"|format(account.balance|float) }}</div>
+        </div>
+        <div class="form-group">
+            <label>Broker</label>
+            <div class="form-control">{{ account.broker_email or 'No broker assigned' }}</div>
+        </div>
+        {% else %}
+        <div class="empty-state">No trading account found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

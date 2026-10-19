@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Stock Terminal{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('dashboard') }}" class="brand">
+            <span class="brand-icon">↗</span>
+            <span class="brand-name">STOCK<span class="green">TERMINAL</span></span>
+        </a>
+
+        <div class="nav-label">WORKSPACE</div>
+        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+           href="{{ url_for('dashboard') }}"><span>▦</span> <span>Dashboard</span></a>
+        <a class="nav-link {% if request.endpoint == 'stocks' %}active{% endif %}"
+           href="{{ url_for('stocks') }}"><span>◈</span> <span>Explore Stocks</span></a>
+        <a class="nav-link {% if request.endpoint == 'portfolio' %}active{% endif %}"
+           href="{{ url_for('portfolio') }}"><span>▤</span> <span>My Portfolio</span></a>
+        <a class="nav-link {% if request.endpoint == 'orders' %}active{% endif %}"
+           href="{{ url_for('orders') }}"><span>⇄</span> <span>Orders & Trades</span></a>
+        <a class="nav-link {% if request.endpoint == 'transactions' %}active{% endif %}"
+           href="{{ url_for('transactions') }}"><span>⇅</span> <span>Transactions</span></a>
+
+        <div class="nav-label">DISCOVER</div>
+        <a class="nav-link {% if request.endpoint == 'watchlists' %}active{% endif %}"
+           href="{{ url_for('watchlists') }}"><span>☆</span> <span>Watchlists</span></a>
+        <a class="nav-link {% if request.endpoint == 'companies' %}active{% endif %}"
+           href="{{ url_for('companies') }}"><span>▣</span> <span>Companies</span></a>
+        <a class="nav-link {% if request.endpoint == 'dividends' %}active{% endif %}"
+           href="{{ url_for('dividends') }}"><span>₹</span> <span>Dividends</span></a>
+
+        <div class="nav-label">ACCOUNT</div>
+        <a class="nav-link {% if request.endpoint == 'account' %}active{% endif %}"
+           href="{{ url_for('account') }}"><span>⚙</span> <span>Account Details</span></a>
+    </aside>
+
+    <main class="main-area">
+        <header class="topbar">
+            <div>
+                <h1 class="page-title">{% block page_heading %}Market Overview{% endblock %}</h1>
+                <div class="subtitle">{% block page_subtitle %}Your trading workspace{% endblock %}</div>
+            </div>
+            <div class="topbar-right">
+                <span class="demo-badge">PAPER TRADING</span>
+                <div class="avatar">DI</div>
+            </div>
+        </header>
+
+        <section class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {% if category == 'error' %}error{% endif %}"
+                             data-auto-dismiss>{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </section>
+
+        <footer class="footer">
+            STOCK TERMINAL · EDUCATIONAL PAPER-TRADING PLATFORM · NOT FINANCIAL ADVICE
+        </footer>
+    </main>
+</div>
+</body>
+</html>

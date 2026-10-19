@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions | Stock Terminal{% endblock %}
+{% block page_heading %}Transactions{% endblock %}
+{% block page_subtitle %}Review your account transaction ledger{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Transaction Ledger</h2>
+            <div class="subtitle">Account activity recorded in Oracle</div>
+        </div>
+        <span class="demo-badge">AUDIT HISTORY</span>
+    </div>
+
+    <div class="search-row">
+        <input id="stockSearch" class="form-control" type="search"
+               placeholder="Search transaction type or reference...">
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>TRANSACTION ID</th>
+                    <th>DATE</th>
+                    <th>TYPE</th>
+                    <th>REFERENCE</th>
+                    <th>AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr data-stock-row>
+                    <td>#{{ transaction.transaction_id }}</td>
+                    <td>{{ transaction.transaction_date }}</td>
+                    <td>
+                        <span class="status-badge">{{ transaction.type }}</span>
+                    </td>
+                    <td>{{ transaction.reference or '—' }}</td>
+                    <td class="stock-symbol">
+                        ₹{{ "%.2f"|format(transaction.amount|float) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        No transactions recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <h2 class="panel-title">About this ledger</h2>
+    <p class="muted">
+        Transactions are retrieved from the STOCK_TRANSACTION table.
+        Completed simulated trades should create corresponding transaction records.
+        This page displays existing records and does not create deposits or withdrawals.
+    </p>
+</div>
+{% endblock %}

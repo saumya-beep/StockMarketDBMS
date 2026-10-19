@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="muted">STOCK DETAILS</p>
+        <h1>{{ stock.company_name }}</h1>
+        <p>{{ stock.symbol }} · Historical market prices</p>
+    </div>
+    <a href="{{ url_for('stocks') }}">← Back to stocks</a>
+</div>
+
+<div class="card" style="padding:24px; margin-bottom:20px;">
+    <p class="muted">Latest price stored in Oracle</p>
+    <h2>₹{{ "%.2f"|format(stock.current_price|float) }}</h2>
+    <p class="muted">
+        Historical chart data is sourced from imported daily market records.
+    </p>
+</div>
+
+<div class="card" style="padding:24px;">
+    <h2>Historical price chart</h2>
+    <p class="muted">
+        Historical prices · Daily intervals · Not a live quote
+    </p>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:18px 0;">
+        
+        <button type="button" data-period="1W">1W</button>
+        <button type="button" data-period="1M">1M</button>
+        <button type="button" data-period="1Y">1Y</button>
+    </div>
+
+    <p id="chartStatus" role="status" aria-live="polite">
+        Loading historical prices...
+    </p>
+
+    <div id="priceChart" style="height:380px; width:100%;"></div>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+(() => {
+    const stockId = {{ stock.stock_id|int }};
+    const chartElement = document.getElementById("priceChart");
+    const status = document.getElementById("chartStatus");
+    const chart = LightweightCharts.createChart(chartElement, {
+        height: 380,
+        layout: {
+            background: { color: "#0b1220" },
+            textColor: "#d1d5db"
+        },
+        grid: {
+            vertLines: { color: "#1f2937" },
+            horzLines: { color: "#1f2937" }
+        },
+        rightPriceScale: { borderColor: "#374151" },
+        timeScale: { borderColor: "#374151", timeVisible: false }
+    });
+
+    const line = chart.addLineSeries({
+        color: "#38bdf8",
+        lineWidth: 2,
+        priceLineVisible: true
+    });
+
+    new ResizeObserver(() => {
+        chart.applyOptions({ width: chartElement.clientWidth });
+    }).observe(chartElement);
+
+    async function loadPeriod(period) {
+        document.querySelectorAll("[data-period]").forEach(button => {
+            button.disabled = button.dataset.period === period;
+        });
+
+        line.setData([]);
+        status.textContent = "Loading " + period + " history...";
+
+        try {
+            const response = await fetch(
+                `/api/stocks/${stockId}/history?period=${period}`
+            );
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to load history.");
+            }
+
+            if (result.message) {
+                line.setData([]);
+                status.textContent = result.message;
+                return;
+            }
+
+            if (!result.data || result.data.length === 0) {
+                status.textContent =
+                    "No historical records are available for this period.";
+                return;
+            }
+
+            line.setData(result.data);
+            chart.timeScale().fitContent();
+            status.textContent =
+                `${result.data.length} daily observations loaded from Oracle.`;
+        } catch (error) {
+            status.textContent = error.message;
+        }
+    }
+
+    document.querySelectorAll("[data-period]").forEach(button => {
+        button.addEventListener("click", () => loadPeriod(button.dataset.period));
+    });
+
+    loadPeriod("1Y");
+})();
+</script>
+{% endblock %}

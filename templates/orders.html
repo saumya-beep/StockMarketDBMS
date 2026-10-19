@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Orders & Trades | Stock Terminal{% endblock %}
+{% block page_heading %}Orders & Trades{% endblock %}
+{% block page_subtitle %}Review your order history and executed trades{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">TOTAL ORDERS</div>
+        <div class="stat-value">{{ orders|length }}</div>
+        <div class="stat-foot">Orders returned by Oracle</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">EXECUTED TRADES</div>
+        <div class="stat-value">{{ trades|length }}</div>
+        <div class="stat-foot">Recorded trade executions</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">BUY ORDERS</div>
+        <div class="stat-value">{{ orders|selectattr('order_type', 'equalto', 'BUY')|list|length }}</div>
+        <div class="stat-foot">Purchase orders</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">SELL ORDERS</div>
+        <div class="stat-value">{{ orders|selectattr('order_type', 'equalto', 'SELL')|list|length }}</div>
+        <div class="stat-foot">Sell orders</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Order History</h2>
+        <a href="{{ url_for('stocks') }}" class="btn btn-primary">+ New Trade</a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>ORDER ID</th>
+                    <th>DATE</th>
+                    <th>STOCK</th>
+                    <th>TYPE</th>
+                    <th>QUANTITY</th>
+                    <th>PRICE</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.order_id }}</td>
+                    <td>{{ order.order_date }}</td>
+                    <td class="stock-symbol">{{ order.symbol }}</td>
+                    <td class="{% if order.order_type == 'BUY' %}green{% else %}red{% endif %}">
+                        {{ order.order_type }}
+                    </td>
+                    <td>{{ order.quantity }}</td>
+                    <td>₹{{ "%.2f"|format(order.price|float) }}</td>
+                    <td><span class="status-badge">{{ order.status }}</span></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="empty-state">No orders recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Executed Trades</h2>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>TRADE ID</th>
+                    <th>DATE</th>
+                    <th>STOCK</th>
+                    <th>TYPE</th>
+                    <th>QUANTITY</th>
+                    <th>EXECUTION PRICE</th>
+                    <th>TRADE VALUE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trade in trades %}
+                <tr>
+                    <td>#{{ trade.trade_id }}</td>
+                    <td>{{ trade.trade_date }}</td>
+                    <td class="stock-symbol">{{ trade.symbol }}</td>
+                    <td class="{% if trade.trade_type == 'BUY' %}green{% else %}red{% endif %}">
+                        {{ trade.trade_type }}
+                    </td>
+                    <td>{{ trade.quantity }}</td>
+                    <td>₹{{ "%.2f"|format(trade.execution_price|float) }}</td>
+                    <td>₹{{ "%.2f"|format((trade.quantity * trade.execution_price)|float) }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="empty-state">No executed trades yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

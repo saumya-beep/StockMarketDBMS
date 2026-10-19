@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Stocks | Stock Terminal{% endblock %}
+{% block page_heading %}Explore Stocks{% endblock %}
+{% block page_subtitle %}Search companies and place simulated trades{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Listed Securities</h2>
+            <div class="subtitle">Browse stocks available in your Oracle database</div>
+        </div>
+        <span class="demo-badge">PAPER TRADING</span>
+    </div>
+
+    <div class="search-row">
+        <input id="stockSearch" class="form-control"
+               type="search" placeholder="Search by symbol or company name...">
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>COMPANY / SYMBOL</th>
+                    <th>SECTOR</th>
+                    <th>STOCK PRICE</th>
+                    <th>QUANTITY</th>
+                    <th>BUY / SELL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr data-stock-row>
+                    <td>
+                        <div class="stock-identity">
+                            <div class="stock-mark">{{ stock.symbol[:2] }}</div>
+                            <div>
+                                <div class="stock-symbol">{{ stock.symbol }}</div>
+                                <div class="stock-name">{{ stock.company_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ stock.sector_name or 'Other' }}</td>
+                    <td class="stock-symbol">₹{{ "%.2f"|format(stock.price|float) }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('trade') }}"
+                              data-trade-form style="display:flex;gap:7px;align-items:center">
+                            <input type="hidden" name="stock_id" value="{{ stock.stock_id }}">
+                            <input class="form-control" style="width:85px"
+                                   type="number" name="quantity" min="1" step="1"
+                                   value="1" required>
+                    </td>
+                    <td>
+                            <div style="display:flex;gap:6px">
+                                <button class="btn btn-buy" type="submit"
+                                        name="order_type" value="BUY">Buy</button>
+                                <button class="btn btn-sell" type="submit"
+                                        name="order_type" value="SELL">Sell</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        No stocks found in the database.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

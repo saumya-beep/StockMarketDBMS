@@ -1,0 +1,148 @@
+
+{
+{% extends "base.html" %}
+
+{% block title %}Companies | Stock Terminal{% endblock %}
+{% block page_heading %}Companies & Sectors{% endblock %}
+{% block page_subtitle %}Explore listed companies and their market sectors{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Company Directory</h2>
+            <div class="subtitle">Company information linked to your stock records</div>
+        </div>
+        <span class="demo-badge">COMPANY DATA</span>
+    </div>
+
+    <div class="search-row">
+        <input id="companySearch" class="form-control" type="search"
+               placeholder="Search companies, sectors or symbols..."
+               autocomplete="off">
+    </div>
+
+    <div class="table-wrap" style="width:100%; max-width:100%; overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>COMPANY</th>
+                    <th>SECTOR</th>
+                    <th>FOUNDED</th>
+                    <th>STOCK SYMBOL</th>
+                    <th>CURRENT PRICE</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody id="companiesTableBody">
+                {% for company in companies %}
+                <tr data-company-row>
+                    <td>
+                        <div class="stock-symbol">{{ company.company_name }}</div>
+                        <div class="stock-name">Company ID: #{{ company.company_id }}</div>
+                    </td>
+                    <td>{{ company.sector_name or 'Other' }}</td>
+                    <td>{{ company.founded_year or '—' }}</td>
+                    <td class="stock-symbol">{{ company.symbol or 'Not listed' }}</td>
+                    <td>
+                        {% if company.price is not none %}
+                            ₹{{ "%.2f"|format(company.price|float) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                   <td>
+    <form method="POST" action="{{ url_for('update_company') }}"
+          style="display:flex; gap:6px; align-items:center;">
+        <input type="hidden" name="company_id"
+               value="{{ company.company_id }}">
+
+        <input type="number" name="founded_year"
+               min="1800" max="2026"
+               value="{{ company.founded_year or '' }}"
+               placeholder="Year"
+               style="width:90px; padding:8px;">
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">No companies found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function () {
+    const searchInput = document.getElementById("companySearch");
+    const tableBody = document.getElementById("companiesTableBody");
+
+    if (!searchInput || !tableBody) return;
+
+    const rows = Array.from(
+        tableBody.querySelectorAll("tr[data-company-row]")
+    );
+
+    searchInput.addEventListener("input", function () {
+        const query = searchInput.value.trim().toLowerCase();
+
+        rows.forEach(function (row) {
+            const cells = row.querySelectorAll("td");
+            const company = cells[0]?.innerText.toLowerCase() || "";
+            const sector = cells[1]?.innerText.toLowerCase() || "";
+            const symbol = cells[3]?.innerText.toLowerCase() || "";
+
+            row.style.display =
+                company.includes(query) ||
+                sector.includes(query) ||
+                symbol.includes(query) ? "" : "none";
+        });
+    });
+})();
+
+function editFoundedYear(companyId, currentYear, companyName) {
+    const value = prompt(
+        "Enter the founded year for " + companyName +
+        " (leave blank to clear it):",
+        currentYear == null ? "" : String(currentYear)
+    );
+
+    if (value === null) return;
+
+    const trimmed = value.trim();
+
+    if (trimmed !== "" &&
+        (!/^\d{4}$/.test(trimmed) ||
+         Number(trimmed) < 1800 ||
+         Number(trimmed) > new Date().getFullYear())) {
+        alert("Enter a valid four-digit year.");
+        return;
+    }
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/companies/update";
+
+    const fields = {
+        company_id: companyId,
+        founded_year: trimmed
+    };
+
+    Object.entries(fields).forEach(function ([name, fieldValue]) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = fieldValue;
+        form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}

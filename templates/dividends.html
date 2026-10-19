@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Dividends | Stock Terminal{% endblock %}
+{% block page_heading %}Dividends{% endblock %}
+{% block page_subtitle %}Review dividend information for listed stocks{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Dividend Calendar</h2>
+            <div class="subtitle">Dividend records stored in Oracle</div>
+        </div>
+        <span class="demo-badge">CORPORATE ACTIONS</span>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>DIVIDEND ID</th>
+                    <th>STOCK</th>
+                    <th>COMPANY</th>
+                    <th>DIVIDEND / SHARE</th>
+                    <th>RECORD DATE</th>
+                    <th>PAYMENT DATE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dividend in dividends %}
+                <tr>
+                    <td>#{{ dividend.dividend_id }}</td>
+                    <td class="stock-symbol">{{ dividend.symbol }}</td>
+                    <td>{{ dividend.company_name }}</td>
+                    <td>₹{{ "%.2f"|format(dividend.dividend_per_share|float) }}</td>
+                    <td>{{ dividend.record_date or '—' }}</td>
+                    <td>{{ dividend.payment_date or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        No dividend records found. Add records to the DIVIDEND table to display them here.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

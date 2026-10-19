@@ -1,0 +1,394 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Stock Terminal{% endblock %}
+{% block page_heading %}Market Overview{% endblock %}
+{% block page_subtitle %}Monitor your account, market and investments{% endblock %}
+
+{% block content %}
+
+<!-- Account summary -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">AVAILABLE BALANCE</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(balance|float) }}
+        </div>
+        <div class="stat-foot">Available trading funds</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">PORTFOLIO VALUE</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(portfolio_value|float) }}
+        </div>
+        <div class="stat-foot">Current value of holdings</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">TOTAL INVESTED</div>
+        <div class="stat-value">
+            ₹{{ "%.2f"|format(total_invested|float) }}
+        </div>
+        <div class="stat-foot">Cost of current holdings</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">UNREALISED P&amp;L</div>
+        <div class="stat-value {% if pnl >= 0 %}green{% else %}red{% endif %}">
+            {% if pnl > 0 %}+{% endif %}₹{{ "%.2f"|format(pnl|float) }}
+        </div>
+        <div class="stat-foot">Based on current stock prices</div>
+    </div>
+</div>
+
+<!-- Historical market summary -->
+<div class="panel market-summary-panel">
+    <div class="panel-header">
+        <h2 class="panel-title">Historical Market Summary</h2>
+        <span class="stock-name">Imported daily data · Not live quotes</span>
+    </div>
+
+    <div class="stats-grid market-summary-grid">
+        <div class="stat-card">
+            <div class="stat-label">TRACKED STOCKS</div>
+            <div class="stat-value">{{ total_market_stocks }}</div>
+            <div class="stat-foot">With available price changes</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">ADVANCING</div>
+            <div class="stat-value green">{{ advancing_count }}</div>
+            <div class="stat-foot">Positive daily change</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">DECLINING</div>
+            <div class="stat-value red">{{ declining_count }}</div>
+            <div class="stat-foot">Negative daily change</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">AVERAGE DAILY CHANGE</div>
+            <div class="stat-value {% if average_change >= 0 %}green{% else %}red{% endif %}">
+                {% if average_change > 0 %}+{% endif %}{{ "%.2f"|format(average_change|float) }}%
+            </div>
+            <div class="stat-foot">Average across tracked stocks</div>
+        </div>
+    </div>
+</div>
+
+<!-- Top gainers and losers -->
+<div class="content-grid market-movers-grid">
+
+    <!-- Top gainers -->
+    <div class="panel movers-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Top Gainers</h2>
+            <span class="green">Daily change ↑</span>
+        </div>
+
+        {% if gainers %}
+            {% for stock in gainers %}
+                <div class="mover-row">
+                    <div class="mover-left">
+                        <span class="mover-rank">{{ loop.index }}</span>
+
+                        <div class="mover-identity">
+                            <div class="stock-symbol">{{ stock.symbol }}</div>
+                            <div class="stock-name">{{ stock.company_name }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mover-right">
+                        <div class="mover-price">
+                            ₹{{ "%.2f"|format(stock.current_price|float) }}
+                        </div>
+
+                        <span class="change-badge positive">
+                            <span>↑</span>
+                            {{ "%.2f"|format(stock.change_percent|float) }}%
+                        </span>
+
+                        <a class="mover-chart-link"
+                           href="{{ url_for('stock_detail', stock_id=stock.stock_id) }}">
+                            View Chart ↗
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                No historical price changes available.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Top losers -->
+    <div class="panel movers-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Top Losers</h2>
+            <span class="red">Daily change ↓</span>
+        </div>
+
+        {% if losers %}
+            {% for stock in losers %}
+                <div class="mover-row">
+                    <div class="mover-left">
+                        <span class="mover-rank loser-rank">{{ loop.index }}</span>
+
+                        <div class="mover-identity">
+                            <div class="stock-symbol">{{ stock.symbol }}</div>
+                            <div class="stock-name">{{ stock.company_name }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mover-right">
+                        <div class="mover-price">
+                            ₹{{ "%.2f"|format(stock.current_price|float) }}
+                        </div>
+
+                        <span class="change-badge negative">
+                            <span>↓</span>
+                            {{ "%.2f"|format(stock.change_percent|float) }}%
+                        </span>
+
+                        <a class="mover-chart-link"
+                           href="{{ url_for('stock_detail', stock_id=stock.stock_id) }}">
+                            View Chart ↗
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                No historical price changes available.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Market watch and portfolio -->
+<div class="content-grid">
+
+    <!-- Market watch -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Market Watch</h2>
+            <a href="{{ url_for('stocks') }}" class="btn">
+                View all stocks →
+            </a>
+        </div>
+
+<div class="market-filters">
+    <input id="stockSearch"
+           class="form-control"
+           type="search"
+           placeholder="Search symbol or company..."
+           aria-label="Search stocks">
+
+    <select id="sectorFilter"
+            class="form-control"
+            aria-label="Filter by sector">
+        <option value="">All sectors</option>
+        {% for sector in stocks | map(attribute='sector_name') | select | unique | sort %}
+            <option value="{{ sector | lower }}">{{ sector }}</option>
+        {% endfor %}
+    </select>
+
+    <select id="stockSort"
+            class="form-control"
+            aria-label="Sort stocks">
+        <option value="symbol-asc">Symbol: A–Z</option>
+        <option value="symbol-desc">Symbol: Z–A</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="sector-asc">Sector: A–Z</option>
+    </select>
+</div>
+
+<div class="market-watch-toolbar">
+    <span id="stockResultCount"
+          class="stock-result-count"
+          aria-live="polite">
+        Showing stocks
+    </span>
+
+    <button type="button"
+            id="clearStockFilters"
+            class="btn">
+        ✕ Clear filters
+    </button>
+</div>
+
+
+        
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>STOCK</th>
+                        <th>SECTOR</th>
+                        <th>PRICE</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+
+                <tbody id="stockTableBody">
+                    {% for stock in stocks %}
+                        
+<tr data-stock-row
+    data-symbol="{{ stock.symbol | lower }}"
+    data-company="{{ stock.company_name | lower }}"
+    data-sector="{{ (stock.sector_name or 'Other') | lower }}"
+    data-price="{{ stock.price | float }}">
+
+                            <td>
+                                <div class="stock-identity">
+                                    <div class="stock-mark">
+                                        {{ stock.symbol[:2] }}
+                                    </div>
+
+                                    <div>
+                                        <div class="stock-symbol">
+                                            {{ stock.symbol }}
+                                        </div>
+                                        <div class="stock-name">
+                                            {{ stock.company_name }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>{{ stock.sector_name or 'Other' }}</td>
+
+                            <td class="stock-symbol">
+                                ₹{{ "%.2f"|format(stock.price|float) }}
+                            </td>
+
+                            <td>
+                                <div class="market-actions">
+                                    <form method="POST"
+                                          action="{{ url_for('trade') }}">
+                                        <input type="hidden"
+                                               name="stock_id"
+                                               value="{{ stock.stock_id }}">
+                                        <input type="hidden"
+                                               name="order_type"
+                                               value="BUY">
+                                        <input type="hidden"
+                                               name="quantity"
+                                               value="1">
+                                        <button class="btn btn-buy"
+                                                type="submit">
+                                            Buy
+                                        </button>
+                                    </form>
+
+                                    <form method="POST"
+                                          action="{{ url_for('trade') }}">
+                                        <input type="hidden"
+                                               name="stock_id"
+                                               value="{{ stock.stock_id }}">
+                                        <input type="hidden"
+                                               name="order_type"
+                                               value="SELL">
+                                        <input type="hidden"
+                                               name="quantity"
+                                               value="1">
+                                        <button class="btn btn-sell"
+                                                type="submit">
+                                            Sell
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                No stocks available.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Portfolio and recent activity -->
+    <div class="dashboard-side-column">
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Portfolio Summary</h2>
+                <a href="{{ url_for('portfolio') }}" class="btn">
+                    Details
+                </a>
+            </div>
+
+            {% if holdings %}
+                {% for holding in holdings %}
+                    <div class="portfolio-row">
+                        <div>
+                            <div class="stock-symbol">
+                                {{ holding.symbol }}
+                            </div>
+                            <div class="stock-name">
+                                {{ holding.quantity }} shares
+                            </div>
+                        </div>
+
+                        <div class="portfolio-row-right">
+                            <div class="stock-symbol">
+                                ₹{{ "%.2f"|format(holding.current_value|float) }}
+                            </div>
+                            <div class="stock-name">
+                                Avg ₹{{ "%.2f"|format(holding.avg_price|float) }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    Your portfolio is empty.<br>
+                    Buy a share to get started.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Recent Activity</h2>
+                <a href="{{ url_for('transactions') }}" class="btn">
+                    View all
+                </a>
+            </div>
+
+            {% if transactions %}
+                {% for transaction in transactions %}
+                    <div class="activity-row">
+                        <div class="activity-row-heading">
+                            <span>{{ transaction.type }}</span>
+                            <strong>
+                                ₹{{ "%.2f"|format(transaction.amount|float) }}
+                            </strong>
+                        </div>
+
+                        <div class="stock-name">
+                            {{ transaction.reference or 'Trading activity' }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    No transactions yet.
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

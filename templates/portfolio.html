@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}My Portfolio | Stock Terminal{% endblock %}
+{% block page_heading %}My Portfolio{% endblock %}
+{% block page_subtitle %}Track your investments and holdings{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">CURRENT VALUE</div>
+        <div class="stat-value">₹{{ "%.2f"|format(portfolio_value|float) }}</div>
+        <div class="stat-foot">Value at current stock prices</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">TOTAL INVESTED</div>
+        <div class="stat-value">₹{{ "%.2f"|format(total_invested|float) }}</div>
+        <div class="stat-foot">Cost of current holdings</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">UNREALISED PROFIT / LOSS</div>
+        <div class="stat-value {% if pnl >= 0 %}green{% else %}red{% endif %}">
+            {% if pnl > 0 %}+{% endif %}₹{{ "%.2f"|format(pnl|float) }}
+        </div>
+        <div class="stat-foot">Current value minus invested cost</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">NUMBER OF STOCKS</div>
+        <div class="stat-value">{{ holdings|length }}</div>
+        <div class="stat-foot">Distinct stock positions</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Your Holdings</h2>
+            <div class="subtitle">Quantities and valuations from Oracle</div>
+        </div>
+        <a href="{{ url_for('stocks') }}" class="btn btn-primary">+ Trade Stocks</a>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>STOCK</th>
+                    <th>QUANTITY</th>
+                    <th>AVERAGE BUY PRICE</th>
+                    <th>CURRENT PRICE</th>
+                    <th>INVESTED VALUE</th>
+                    <th>CURRENT VALUE</th>
+                    <th>PROFIT / LOSS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holding in holdings %}
+                <tr>
+                    <td>
+                        <div class="stock-symbol">{{ holding.symbol }}</div>
+                        <div class="stock-name">{{ holding.company_name }}</div>
+                    </td>
+                    <td>{{ holding.quantity }}</td>
+                    <td>₹{{ "%.2f"|format(holding.avg_price|float) }}</td>
+                    <td>₹{{ "%.2f"|format(holding.price|float) }}</td>
+                    <td>₹{{ "%.2f"|format((holding.quantity * holding.avg_price)|float) }}</td>
+                    <td class="stock-symbol">₹{{ "%.2f"|format(holding.current_value|float) }}</td>
+                    <td class="{% if holding.profit_loss >= 0 %}green{% else %}red{% endif %}">
+                        {% if holding.profit_loss > 0 %}+{% endif %}
+                        ₹{{ "%.2f"|format(holding.profit_loss|float) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        No holdings yet. Visit Explore Stocks to make your first simulated purchase.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
